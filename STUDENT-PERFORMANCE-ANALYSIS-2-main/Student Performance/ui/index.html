@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<!-- 
+================================================================================
+STUDENT PERFORMANCE ANALYSIS SYSTEM - ENTERPRISE ANALYTICS DASHBOARD
+================================================================================
+Architecture:
+- Semantic HTML5 with accessible ARIA landmarks
+- Responsive Enterprise Grid (Collapsible Navigation Drawer + Main Stage)
+- Chart.js Dynamic Visualizations + Paginated High-Performance Data Grid
+- Compatible with Apache Spark (PySpark) backend & Flask REST APIs
+================================================================================
+-->
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Analytics | Big Data Platform</title>
+    <meta name="description" content="Enterprise Big Data analytics platform powered by Apache Spark and Python Flask.">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Chart.js via CDN for responsive data visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+    <!-- Application Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- MAIN APP SHELL -->
+    <div class="app-layout">
+
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-logo">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                            <path d="M6 6h10"></path>
+                            <path d="M6 10h10"></path>
+                            <path d="M6 14h7"></path>
+                        </svg>
+                    </div>
+                    <div class="brand-info">
+                        <span class="brand-title">EduSpark BI</span>
+                        <span class="brand-badge">Spark 3.5</span>
+                    </div>
+                </div>
+                <button class="sidebar-toggle-btn" id="sidebar-close-btn" aria-label="Close Sidebar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Group 1: Core Navigation -->
+                <div class="nav-group-label">OVERVIEW</div>
+                <button class="nav-item active" id="btn-preview" onclick="fetchPreview()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect width="18" height="18" x="3" y="3" rx="2" />
+                        <path d="M3 9h18" />
+                        <path d="M9 21V9" />
+                    </svg>
+                    <span>Dataset Preview</span>
+                </button>
+                <button class="nav-item" id="btn-class-stats" onclick="runAnalysis('class_stats')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 17V9" />
+                        <path d="M13 17V5" />
+                        <path d="M8 17v-3" />
+                    </svg>
+                    <span>Class Summary</span>
+                </button>
+
+                <!-- Group 2: Student Analytics -->
+                <div class="nav-group-label">STUDENT PERFORMANCE</div>
+                <button class="nav-item" id="btn-top10" onclick="runAnalysis('top10')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                        <path d="M4 22h16" />
+                        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                    </svg>
+                    <span>Top 10 Students</span>
+                </button>
+                <button class="nav-item" id="btn-ranking" onclick="runAnalysis('ranking')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="10" x2="21" y1="6" y2="6" />
+                        <line x1="10" x2="21" y1="12" y2="12" />
+                        <line x1="10" x2="21" y1="18" y2="18" />
+                        <path d="M4 6h1v4" />
+                        <path d="M4 10h2" />
+                        <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
+                    </svg>
+                    <span>Student Rankings</span>
+                </button>
+                <button class="nav-item" id="btn-highest" onclick="runAnalysis('highest')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m18 15-6-6-6 6" />
+                    </svg>
+                    <span>Subject Toppers</span>
+                </button>
+                <button class="nav-item" id="btn-lowest" onclick="runAnalysis('lowest')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                    <span>Lowest Scorers</span>
+                </button>
+
+                <!-- Group 3: Academic Distribution -->
+                <div class="nav-group-label">ACADEMIC METRICS</div>
+                <button class="nav-item" id="btn-subject-avg" onclick="runAnalysis('subject_avg')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                    </svg>
+                    <span>Subject Averages</span>
+                </button>
+                <button class="nav-item" id="btn-dept-avg" onclick="runAnalysis('dept_avg')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect width="16" height="20" x="4" y="2" rx="2" />
+                        <path d="M9 22v-4h6v4" />
+                        <path d="M8 6h.01" />
+                        <path d="M16 6h.01" />
+                        <path d="M8 10h.01" />
+                        <path d="M16 10h.01" />
+                        <path d="M8 14h.01" />
+                        <path d="M16 14h.01" />
+                    </svg>
+                    <span>Department Averages</span>
+                </button>
+                <button class="nav-item" id="btn-sem-perf" onclick="runAnalysis('sem_perf')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                    </svg>
+                    <span>Semester Trends</span>
+                </button>
+                <button class="nav-item" id="btn-grade-dist" onclick="runAnalysis('grade_dist')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                        <path d="M2 12h20" />
+                    </svg>
+                    <span>Grade Distribution</span>
+                </button>
+
+                <!-- Group 4: Risk Monitoring -->
+                <div class="nav-group-label">RISK & ATTENDANCE</div>
+                <button class="nav-item" id="btn-pass-fail" onclick="runAnalysis('pass_fail')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <polyline points="16 11 18 13 22 9" />
+                    </svg>
+                    <span>Pass / Fail Ratios</span>
+                </button>
+                <button class="nav-item" id="btn-attendance" onclick="runAnalysis('attendance')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                        <line x1="12" x2="12" y1="9" y2="13" />
+                        <line x1="12" x2="12.01" y1="17" y2="17" />
+                    </svg>
+                    <span>Attendance Shortage (&lt;75%)</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="engine-badge">
+                    <div class="engine-dot pulse"></div>
+                    <div class="engine-text">
+                        <span class="engine-label">Backend Engine</span>
+                        <span class="engine-status" id="engine-status-text">Apache Spark local[*]</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN VIEW AREA -->
+        <div class="main-wrapper">
+
+            <!-- TOP APP BAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="mobile-menu-btn" id="sidebar-open-btn" aria-label="Open Sidebar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="4" x2="20" y1="12" y2="12" />
+                            <line x1="4" x2="20" y1="6" y2="6" />
+                            <line x1="4" x2="20" y1="18" y2="18" />
+                        </svg>
+                    </button>
+
+                    <div class="breadcrumbs">
+                        <span class="breadcrumb-root">Analytics</span>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current" id="current-view-title">Dataset Preview</span>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <!-- Live Status Pill -->
+                    <div class="status-pill" id="status-container">
+                        <span class="status-indicator" id="status-dot"></span>
+                        <span class="status-text" id="status-text">Connecting...</span>
+                    </div>
+
+                    <!-- Search Filter Box -->
+                    <div class="search-box">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3" />
+                        </svg>
+                        <input type="text" id="table-search-input" placeholder="Filter rows in table..."
+                            aria-label="Search records">
+                        <button id="search-clear-btn" class="search-clear" style="display:none;"
+                            aria-label="Clear Search">&times;</button>
+                    </div>
+
+                    <!-- Theme Toggle -->
+                    <button class="icon-btn" id="theme-toggle" title="Toggle Light/Dark Theme"
+                        aria-label="Toggle Theme">
+                        <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="4" />
+                            <path d="M12 2v2" />
+                            <path d="M12 20v2" />
+                            <path d="m4.93 4.93 1.41 1.41" />
+                            <path d="m17.66 17.66 1.41 1.41" />
+                            <path d="M2 12h2" />
+                            <path d="M20 12h2" />
+                            <path d="m6.34 17.66-1.41 1.41" />
+                            <path d="m19.07 4.93-1.41 1.41" />
+                        </svg>
+                        <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                        </svg>
+                    </button>
+
+                    <!-- Upload Action -->
+                    <button class="btn btn-secondary-outline" id="btn-upload-trigger" onclick="triggerFileUpload()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" x2="12" y1="3" y2="15" />
+                        </svg>
+                        <span>Upload CSV</span>
+                    </button>
+
+                    <!-- Export Report Action -->
+                    <div id="export-controls" style="display: none;">
+                        <button class="btn btn-primary" id="btn-export" onclick="exportReport()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" x2="12" y1="15" y2="12" />
+                            </svg>
+                            <span>Export CSV</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- HIDDEN FILE INPUT FOR UPLOADS -->
+            <input type="file" id="file-input" accept=".csv" style="display: none;"
+                onchange="handleFileSelected(event)">
+
+            <!-- MAIN CONTENT CONTAINER -->
+            <main class="content-stage">
+
+                <!-- DRAG & DROP UPLOAD ZONE (Collapsible) -->
+                <div class="upload-dropzone" id="upload-zone">
+                    <div class="dropzone-content">
+                        <div class="dropzone-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                                <path d="M12 12v9" />
+                                <path d="m16 16-4-4-4 4" />
+                            </svg>
+                        </div>
+                        <div class="dropzone-text">
+                            <h4>Drag and drop student CSV dataset here</h4>
+                            <p>Supports UTF-8 CSV datasets with standard aliases (ID, Marks, Subject, Attendance, etc.)
+                            </p>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="triggerFileUpload()">Browse Files</button>
+                    </div>
+                    <div class="upload-progress-bar" id="upload-progress" style="display: none;">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+
+                <!-- KPI EXECUTIVE SUMMARY CARDS -->
+                <div class="kpi-grid" id="kpi-summary-grid">
+                    <div class="kpi-card" id="kpi-total-students">
+                        <div class="kpi-header">
+                            <span class="kpi-title">TOTAL UNIQUE STUDENTS</span>
+                            <div class="kpi-icon kpi-blue">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="kpi-body">
+                            <div class="kpi-value" id="kpi-val-students">--</div>
+                            <span class="kpi-subtext">Active cohort size</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" id="kpi-class-avg">
+                        <div class="kpi-header">
+                            <span class="kpi-title">CLASS AVERAGE MARKS</span>
+                            <div class="kpi-icon kpi-indigo">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="m9 12 2 2 4-4" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="kpi-body">
+                            <div class="kpi-value" id="kpi-val-avg-marks">--</div>
+                            <span class="kpi-subtext">Out of 100 maximum</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" id="kpi-pass-rate">
+                        <div class="kpi-header">
+                            <span class="kpi-title">OVERALL PASS RATE</span>
+                            <div class="kpi-icon kpi-emerald">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                    <polyline points="22 4 12 14.01 9 11.01" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="kpi-body">
+                            <div class="kpi-value" id="kpi-val-pass-rate">--</div>
+                            <span class="kpi-subtext">Marks &ge; 35 threshold</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" id="kpi-attendance">
+                        <div class="kpi-header">
+                            <span class="kpi-title">AVERAGE ATTENDANCE</span>
+                            <div class="kpi-icon kpi-teal">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="kpi-body">
+                            <div class="kpi-value" id="kpi-val-attendance">--</div>
+                            <span class="kpi-subtext">Semester presence</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" id="kpi-risk">
+                        <div class="kpi-header">
+                            <span class="kpi-title">ATTENDANCE AT RISK</span>
+                            <div class="kpi-icon kpi-rose">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                    <line x1="12" x2="12" y1="9" y2="13" />
+                                    <line x1="12" x2="12.01" y1="17" y2="17" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="kpi-body">
+                            <div class="kpi-value text-danger" id="kpi-val-risk">--</div>
+                            <span class="kpi-subtext">&lt;75% minimum KTU quota</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DYNAMIC METRICS SUMMARY ROW (Used by /class_stats) -->
+                <div class="metrics-grid" id="stats-display" style="display: none;"></div>
+
+                <!-- INTERACTIVE CHART SECTION -->
+                <section class="card chart-card" id="chart-section" style="display: none;">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <h3 id="chart-title">Visual Analytics</h3>
+                            <span class="card-subtitle" id="chart-subtitle">Spark DataFrame Aggregations</span>
+                        </div>
+                        <div class="chart-actions">
+                            <div class="chart-type-selector">
+                                <button class="chart-type-btn active" data-type="bar"
+                                    onclick="switchChartType('bar')">Bar</button>
+                                <button class="chart-type-btn" data-type="line"
+                                    onclick="switchChartType('line')">Line</button>
+                                <button class="chart-type-btn" data-type="doughnut"
+                                    onclick="switchChartType('doughnut')">Donut</button>
+                            </div>
+                            <button class="btn btn-sm btn-outline" onclick="downloadChartPng()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" x2="12" y1="15" y2="12" />
+                                </svg>
+                                <span>Save PNG</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- DATA TABLE SECTION -->
+                <section class="card data-table-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <h3 id="table-title">Dataset Records</h3>
+                            <span class="card-subtitle" id="table-record-count">Loading rows...</span>
+                        </div>
+                        <div class="table-actions">
+                            <div class="rows-per-page">
+                                <label for="page-size-select">Show:</label>
+                                <select id="page-size-select" onchange="changePageSize(this.value)">
+                                    <option value="15" selected>15 rows</option>
+                                    <option value="25">25 rows</option>
+                                    <option value="50">50 rows</option>
+                                    <option value="100">100 rows</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SPINNER / SKELETON LOADER -->
+                    <div class="loader-wrapper" id="query-loader" style="display: none;">
+                        <div class="shimmer-container">
+                            <div class="shimmer-bar"></div>
+                            <div class="shimmer-bar"></div>
+                            <div class="shimmer-bar"></div>
+                        </div>
+                        <div class="loader-message-group">
+                            <div class="spinner-ring"></div>
+                            <p class="loader-text" id="loader-message">Processing DataFrame on Spark JVM...</p>
+                        </div>
+                    </div>
+
+                    <!-- PAGINATED TABLE CONTAINER -->
+                    <div class="preview-container" id="table-container">
+                        <table class="enterprise-table" id="data-table">
+                            <thead>
+                                <tr id="table-header"></tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <tr>
+                                    <td colspan="100%" class="empty-state-cell">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">
+                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="1.5">
+                                                    <circle cx="12" cy="12" r="10" />
+                                                    <line x1="12" x2="12" y1="8" y2="12" />
+                                                    <line x1="12" x2="12.01" y1="16" y2="16" />
+                                                </svg>
+                                            </div>
+                                            <h4>No Dataset Active</h4>
+                                            <p>Upload a CSV file or load the sample dataset to inspect records and run
+                                                analytics.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PAGINATION FOOTER -->
+                    <div class="table-pagination-footer" id="table-pagination" style="display: none;">
+                        <div class="pagination-info" id="pagination-info">Showing 1 to 15 of 10000 entries</div>
+                        <div class="pagination-controls">
+                            <button class="page-btn" id="prev-page-btn" onclick="goToPage(currentPage - 1)"
+                                aria-label="Previous Page">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6" />
+                                </svg>
+                                <span>Previous</span>
+                            </button>
+                            <div class="page-numbers" id="page-numbers-container"></div>
+                            <button class="page-btn" id="next-page-btn" onclick="goToPage(currentPage + 1)"
+                                aria-label="Next Page">
+                                <span>Next</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- FOOTER -->
+            <footer class="app-footer">
+                <p>&copy; 2026 B.Tech S5 KTU Big Data Processing Mini Project | Apache Spark (PySpark) &amp; Python
+                    Flask</p>
+            </footer>
+
+        </div>
+    </div>
+
+    <!-- Hidden compatibility div for legacy selector #analytics-buttons-wrapper -->
+    <div id="analytics-buttons-wrapper" style="display:none;"></div>
+
+    <!-- Embedded Offline Dataset Seed -->
+    <script src="data_seed.js"></script>
+
+    <!-- Application JavaScript -->
+    <script src="script.js"></script>
+</body>
+
+</html>
